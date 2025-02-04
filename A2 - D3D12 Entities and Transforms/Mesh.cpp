@@ -18,7 +18,7 @@ Mesh::Mesh(Vertex vertices[], int vCount, unsigned int indices[], int iCount) {
 	vertexCount = vCount;
 	indexCount = iCount;
 	CalculateTangents(vertices, vCount, indices, iCount);
-	ConstructBuffers(vertices, indices);
+	ConstructBuffers(vertices, vCount, indices, iCount);
 }
 
 Mesh::Mesh(const wchar_t* filePath) {
@@ -232,20 +232,20 @@ Mesh::Mesh(const wchar_t* filePath) {
 	vertexCount = vertCounter;
 	indexCount = indexCounter;
 	CalculateTangents(&verts[0], vertexCount, &indices[0], indexCount);
-	ConstructBuffers(&verts[0], &indices[0]);
+	ConstructBuffers(&verts[0], vertexCount, &indices[0], indexCount);
 }
 
-void Mesh::ConstructBuffers(Vertex vertices[], unsigned int indices[]) {
+void Mesh::ConstructBuffers(Vertex vertices[], int vertexCount, unsigned int indices[], int indexCount) {
 	// Create the two buffers
-	vertexBuffer = Graphics::CreateStaticBuffer(sizeof(Vertex), ARRAYSIZE(vertices), vertices);
-	indexBuffer = Graphics::CreateStaticBuffer(sizeof(unsigned int), ARRAYSIZE(indices), indices);
+	vertexBuffer = Graphics::CreateStaticBuffer(sizeof(Vertex), vertexCount, vertices);
+	indexBuffer = Graphics::CreateStaticBuffer(sizeof(unsigned int), indexCount, indices);
 
 	// Set up the views
 	vbView.StrideInBytes = sizeof(Vertex);
-	vbView.SizeInBytes = sizeof(Vertex) * ARRAYSIZE(vertices);
+	vbView.SizeInBytes = sizeof(Vertex) * vertexCount;
 	vbView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 	ibView.Format = DXGI_FORMAT_R32_UINT;
-	ibView.SizeInBytes = sizeof(unsigned int) * ARRAYSIZE(indices);
+	ibView.SizeInBytes = sizeof(unsigned int) * indexCount;
 	ibView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
 }
 

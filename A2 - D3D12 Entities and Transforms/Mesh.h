@@ -19,7 +19,7 @@ public:
 	~Mesh();
 
 private:
-	void ConstructBuffers(int vertexSize, int indexSize);
+	void ConstructBuffers(Vertex* vertices, int vertexCount, unsigned int* indices, int indexCount);
 	void CalculateTangents(Vertex* vertices, int vertexCount, unsigned int* indices, int indexCount);
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;

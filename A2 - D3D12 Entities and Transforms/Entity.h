@@ -11,6 +11,7 @@ public:
 
 	Transform* GetTransform();
 	std::shared_ptr<Mesh> GetMesh();
+	void SetMesh(Mesh);
 	const char* name;
 
 	void Draw();

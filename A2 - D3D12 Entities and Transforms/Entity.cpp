@@ -21,3 +21,7 @@ Transform* Entity::GetTransform() {
 shared_ptr<Mesh> Entity::GetMesh() {
 	return mesh;
 }
+
+void Entity::SetMesh(Mesh mesh) {
+	this->mesh = make_shared<Mesh>(mesh);
+}
