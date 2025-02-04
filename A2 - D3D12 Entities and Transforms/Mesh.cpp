@@ -340,12 +340,9 @@ void Mesh::CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices,
 }
 
 void Mesh::Draw() {
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
 	Graphics::CommandList->IASetVertexBuffers(0, 1, &vbView);
 	Graphics::CommandList->IASetIndexBuffer(&ibView);
 	Graphics::CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// Draw
 	Graphics::CommandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 }
 

@@ -4,6 +4,7 @@
 #include "Input.h"
 #include "PathHelpers.h"
 #include "Window.h"
+#include "Buffer.h"
 
 #include <DirectXMath.h>
 
@@ -22,6 +23,13 @@ void Game::Initialize()
 {
 	CreateRootSigAndPipelineState();
 	CreateGeometry();
+
+	camera = make_shared<Camera>(Camera(
+		Window::AspectRatio(),
+		XMFLOAT3(0, 0, -10),
+		XMFLOAT3(0, 0, 0),
+		0.4f,
+		false));
 }
 
 
@@ -188,7 +196,12 @@ void Game::CreateRootSigAndPipelineState()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
-	
+	entities.push_back(Entity("Helix", Mesh(FixPath(L"../../assets/meshes/helix.obj").c_str())));
+	entities.push_back(Entity("Sphere", Mesh(FixPath(L"../../assets/meshes/sphere.obj").c_str())));
+	entities.push_back(Entity("Cube", Mesh(FixPath(L"../../assets/meshes/helix.obj").c_str())));
+
+	entities[0].GetTransform()->MoveAbsolute(-20.0f, 0, 0);
+	entities[2].GetTransform()->MoveAbsolute(20.0f, 0, 0);
 }
 
 // --------------------------------------------------------
@@ -198,50 +211,50 @@ void Game::CreateGeometry()
 void Game::OnResize()
 {
 	// Reset the depth buffer and create it again
-	if (Graphics::Device) {					//Called at the start, so this clause prevents an immediate crash.
-		Graphics::DepthBuffer.Reset();
-		// Describe the depth stencil buffer resource
-		D3D12_RESOURCE_DESC depthBufferDesc = {};
-		depthBufferDesc.Alignment = 0;
-		depthBufferDesc.DepthOrArraySize = 1;
-		depthBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		depthBufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-		depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthBufferDesc.Height = Window::Height();
-		depthBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-		depthBufferDesc.MipLevels = 1;
-		depthBufferDesc.SampleDesc.Count = 1;
-		depthBufferDesc.SampleDesc.Quality = 0;
-		depthBufferDesc.Width = Window::Width();
-		// Describe the clear value that will most often be used
-		// for this buffer (which optimizes the clearing of the buffer)
-		D3D12_CLEAR_VALUE clear = {};
-		clear.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		clear.DepthStencil.Depth = 1.0f;
-		clear.DepthStencil.Stencil = 0;
-		// Describe the memory heap that will house this resource
-		D3D12_HEAP_PROPERTIES props = {};
-		props.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		props.CreationNodeMask = 1;
-		props.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		props.Type = D3D12_HEAP_TYPE_DEFAULT;
-		props.VisibleNodeMask = 1;
-		// Actually create the resource, and the heap in which it
-		// will reside, and map the resource to that heap
-		Graphics::Device->CreateCommittedResource(
-			&props,
-			D3D12_HEAP_FLAG_NONE,
-			&depthBufferDesc,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE,
-			&clear,
-			IID_PPV_ARGS(Graphics::DepthBuffer.GetAddressOf()));
-		// Now recreate the depth stencil view
-		Graphics::DSVHandle = Graphics::DSVHeap->GetCPUDescriptorHandleForHeapStart();
-		Graphics::Device->CreateDepthStencilView(
-			Graphics::DepthBuffer.Get(),
-			0, // Default view (first mip)
-			Graphics::DSVHandle);
-	}
+	if (!Graphics::Device) return; //Called at the start, so this clause prevents an immediate crash.
+
+	Graphics::DepthBuffer.Reset();
+	// Describe the depth stencil buffer resource
+	D3D12_RESOURCE_DESC depthBufferDesc = {};
+	depthBufferDesc.Alignment = 0;
+	depthBufferDesc.DepthOrArraySize = 1;
+	depthBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthBufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthBufferDesc.Height = Window::Height();
+	depthBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	depthBufferDesc.MipLevels = 1;
+	depthBufferDesc.SampleDesc.Count = 1;
+	depthBufferDesc.SampleDesc.Quality = 0;
+	depthBufferDesc.Width = Window::Width();
+	// Describe the clear value that will most often be used
+	// for this buffer (which optimizes the clearing of the buffer)
+	D3D12_CLEAR_VALUE clear = {};
+	clear.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	clear.DepthStencil.Depth = 1.0f;
+	clear.DepthStencil.Stencil = 0;
+	// Describe the memory heap that will house this resource
+	D3D12_HEAP_PROPERTIES props = {};
+	props.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	props.CreationNodeMask = 1;
+	props.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	props.Type = D3D12_HEAP_TYPE_DEFAULT;
+	props.VisibleNodeMask = 1;
+	// Actually create the resource, and the heap in which it
+	// will reside, and map the resource to that heap
+	Graphics::Device->CreateCommittedResource(
+		&props,
+		D3D12_HEAP_FLAG_NONE,
+		&depthBufferDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&clear,
+		IID_PPV_ARGS(Graphics::DepthBuffer.GetAddressOf()));
+	// Now recreate the depth stencil view
+	Graphics::DSVHandle = Graphics::DSVHeap->GetCPUDescriptorHandleForHeapStart();
+	Graphics::Device->CreateDepthStencilView(
+		Graphics::DepthBuffer.Get(),
+		0, // Default view (first mip)
+		Graphics::DSVHandle);
 
 	// Resize the viewport and scissor rectangle
 	{
@@ -266,7 +279,7 @@ void Game::OnResize()
 		scissorRect.bottom = Window::Height();
 	}
 
-	camera.UpdateProjectionMatrix(Window::AspectRatio());
+	camera->UpdateProjectionMatrix(Window::AspectRatio());
 }
 
 
@@ -275,6 +288,11 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
+	entities[0].GetTransform()->Rotate(0, deltaTime, 0);
+	entities[0].GetTransform()->SetWorldMatrices();
+
+
+	camera->Update(deltaTime);
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
@@ -328,6 +346,17 @@ void Game::Draw(float deltaTime, float totalTime)
 			1, &Graphics::RTVHandles[Graphics::SwapChainIndex()], true, &Graphics::DSVHandle);
 		Graphics::CommandList->RSSetViewports(1, &viewport);
 		Graphics::CommandList->RSSetScissorRects(1, &scissorRect);
+		Graphics::CommandList->SetDescriptorHeaps(1, Graphics::CBVSRVDescriptorHeap.GetAddressOf());
+
+		for (Entity e : entities) {
+			Buffer vsBuffer = Buffer(
+				e.GetTransform()->GetWorldMatrix(),
+				camera->GetViewMatrix(),
+				camera->GetProjectionMatrix());
+			D3D12_GPU_DESCRIPTOR_HANDLE handle = Graphics::FillNextConstantBufferAndGetGPUDescriptorHandle((void *)&vsBuffer, sizeof(Buffer));
+			Graphics::CommandList->SetGraphicsRootDescriptorTable(0, handle);
+			e.Draw();
+		}
 		
 	}
 

@@ -2,8 +2,12 @@
 
 #include <d3d12.h>
 #include <wrl/client.h>
+#include <vector>
 
+#include "Entity.h"
 #include "Camera.h"
+
+using namespace std;
 
 class Game
 {
@@ -39,7 +43,8 @@ private:
 	D3D12_VIEWPORT viewport{};
 	D3D12_RECT scissorRect{};
 
-	// Other objects
-	Camera camera;
+	// Objects
+	vector<Entity> entities;
+	shared_ptr<Camera> camera;
 };
 
