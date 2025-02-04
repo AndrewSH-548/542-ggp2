@@ -26,7 +26,7 @@ void Game::Initialize()
 
 	camera = make_shared<Camera>(Camera(
 		Window::AspectRatio(),
-		XMFLOAT3(0, 0, -10),
+		XMFLOAT3(0, 0, -15),
 		XMFLOAT3(0, 0, 0),
 		0.4f,
 		false));
@@ -198,10 +198,10 @@ void Game::CreateGeometry()
 {
 	entities.push_back(Entity("Helix", Mesh(FixPath(L"../../assets/meshes/helix.obj").c_str())));
 	entities.push_back(Entity("Sphere", Mesh(FixPath(L"../../assets/meshes/sphere.obj").c_str())));
-	entities.push_back(Entity("Cube", Mesh(FixPath(L"../../assets/meshes/helix.obj").c_str())));
+	entities.push_back(Entity("Cube", Mesh(FixPath(L"../../assets/meshes/cube.obj").c_str())));
 
-	entities[0].GetTransform()->MoveAbsolute(-20.0f, 0, 0);
-	entities[2].GetTransform()->MoveAbsolute(20.0f, 0, 0);
+	entities[0].GetTransform()->SetPosition(-3.0f, 0, 0);
+	entities[2].GetTransform()->SetPosition(3.0f, 0, 0);
 }
 
 // --------------------------------------------------------
@@ -289,7 +289,11 @@ void Game::OnResize()
 void Game::Update(float deltaTime, float totalTime)
 {
 	entities[0].GetTransform()->Rotate(0, deltaTime, 0);
-	entities[0].GetTransform()->SetWorldMatrices();
+
+	for (Entity e : entities) {
+		e.GetTransform()->SetWorldMatrices();
+	}
+	
 
 
 	camera->Update(deltaTime);

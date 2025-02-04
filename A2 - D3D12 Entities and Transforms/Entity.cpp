@@ -3,7 +3,7 @@
 using namespace std;
 
 Entity::Entity(const char* name, Mesh mesh) {
-	transform = Transform();
+	this->transform = make_shared<Transform>(Transform());
 	this->mesh = make_shared<Mesh>(mesh);
 }
 
@@ -14,8 +14,8 @@ void Entity::Draw() {
 Entity::~Entity() {
 }
 
-Transform* Entity::GetTransform() {
-	return &transform;
+shared_ptr<Transform> Entity::GetTransform() {
+	return transform;
 }
 
 shared_ptr<Mesh> Entity::GetMesh() {
