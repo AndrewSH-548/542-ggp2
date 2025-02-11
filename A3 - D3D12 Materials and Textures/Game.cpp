@@ -236,9 +236,32 @@ void Game::CreateRootSigAndPipelineState()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
-	entities.push_back(Entity("Helix", Mesh(FixPath(L"../../assets/meshes/helix.obj").c_str())));
-	entities.push_back(Entity("Sphere", Mesh(FixPath(L"../../assets/meshes/sphere.obj").c_str())));
-	entities.push_back(Entity("Cube", Mesh(FixPath(L"../../assets/meshes/cube.obj").c_str())));
+	Material floor = Material(XMFLOAT3(1, 1, 1), XMFLOAT2(1, 1), XMFLOAT2(0, 0), pipelineState);
+	Material wood = Material(XMFLOAT3(1, 1, 1), XMFLOAT2(1, 1), XMFLOAT2(0, 0), pipelineState);
+	Material paint = Material(XMFLOAT3(1, 1, 1), XMFLOAT2(1, 1), XMFLOAT2(0, 0), pipelineState);
+
+	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/albedo.png").c_str()), 0);
+	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/normals.png").c_str()), 1);
+	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/roughness.png").c_str()), 2);
+	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/metal.png").c_str()), 3);
+	
+	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/albedo.png").c_str()), 0);
+	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/normals.png").c_str()), 1);
+	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/roughness.png").c_str()), 2);
+	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/metal.png").c_str()), 3);
+	
+	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/albedo.png").c_str()), 0);
+	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/normals.png").c_str()), 1);
+	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/roughness.png").c_str()), 2);
+	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/metal.png").c_str()), 3);
+
+	floor.FinalizeMaterial();
+	wood.FinalizeMaterial();
+	paint.FinalizeMaterial();
+
+	entities.push_back(Entity("Helix", Mesh(FixPath(L"../../assets/meshes/helix.obj").c_str()), wood));
+	entities.push_back(Entity("Sphere", Mesh(FixPath(L"../../assets/meshes/sphere.obj").c_str()), paint));
+	entities.push_back(Entity("Cube", Mesh(FixPath(L"../../assets/meshes/cube.obj").c_str()), floor));
 
 	entities[0].GetTransform()->SetPosition(-3.0f, 0, 0);
 	entities[2].GetTransform()->SetPosition(3.0f, 0, 0);

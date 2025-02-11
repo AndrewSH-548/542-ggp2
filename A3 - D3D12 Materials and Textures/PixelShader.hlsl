@@ -1,18 +1,10 @@
+#include "ShaderIncludes.hlsli"
 
-// Struct representing the data we expect to receive from earlier pipeline stages
-// - Should match the output of our corresponding vertex shader
-// - The name of the struct itself is unimportant
-// - The variable names don't have to match other shaders (just the semantics)
-// - Each variable must have a semantic, which defines its usage
-struct VertexToPixel
-{
-	// Data type
-	//  |
-	//  |   Name          Semantic
-	//  |    |                |
-	//  v    v                v
-	float4 screenPosition	: SV_POSITION;
-};
+Texture2D Albedo : register(t0);
+Texture2D Normal : register(t1);
+Texture2D Roughness : register(t2);
+Texture2D Metalness : register(t3);
+SamplerState Sampler : register(s0);
 
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
@@ -29,5 +21,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
-	return float4(1, 1, 1, 1);
+	return Albedo.Sample(Sampler, input.uv);
 }
