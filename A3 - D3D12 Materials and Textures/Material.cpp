@@ -28,6 +28,14 @@ void Material::FinalizeMaterial() {
 	}
 }
 
+XMFLOAT2 Material::GetUVScale() {
+	return uvScale;
+}
+
+XMFLOAT2 Material::GetUVOffset() {
+	return uvOffset;
+}
+
 Microsoft::WRL::ComPtr<ID3D12PipelineState> Material::GetPipelineState() {
 	return pipelineState;
 }

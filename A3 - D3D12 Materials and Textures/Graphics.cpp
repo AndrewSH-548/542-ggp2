@@ -675,7 +675,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE Graphics::FillNextConstantBufferAndGetGPUDescriptorH
 	}
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE Graphics::LoadTexture(const wchar_t* file, bool generateMips = true) {
+D3D12_CPU_DESCRIPTOR_HANDLE Graphics::LoadTexture(const wchar_t* file, bool generateMips) {
 	// Helper function from DXTK for uploading a resource
 	// (like a texture) to the appropriate GPU memory
 	DirectX::ResourceUploadBatch upload(Device.Get());

@@ -47,8 +47,9 @@ VertexToPixel main( VertexShaderInput input )
 	//   a perspective projection matrix, which we'll get to in the future).
 	matrix wvp = mul(projection, mul(view, world));
 	output.screenPosition = mul(wvp, float4(input.localPosition, 1.0f));
-	output.normal = mul(wvp, input.normal);
-	output.tangent = mul(world, input.tangent);
+	output.worldPosition = mul(world, float4(input.localPosition, 1.0f)).xyz;
+	output.normal = (float3)mul(wvp, float4(input.normal, 1));
+	output.tangent = (float3)mul(world, float4(input.tangent, 1));
 	output.uv = input.uv;
 
 	// Whatever we return will make its way through the pipeline to the

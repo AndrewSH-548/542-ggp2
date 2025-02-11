@@ -265,6 +265,23 @@ void Game::CreateGeometry()
 
 	entities[0].GetTransform()->SetPosition(-3.0f, 0, 0);
 	entities[2].GetTransform()->SetPosition(3.0f, 0, 0);
+
+	//First Light: Yellow direction light
+	Light dirLight = {};
+	dirLight.type = LIGHT_TYPE_DIRECTIONAL;
+	dirLight.direction = XMFLOAT3(0.0f, -1.0f, 1.0f);
+	dirLight.color = XMFLOAT3(1.0f, 1.0f, 0.0f);
+	dirLight.intensity = 6.3f;
+	lights.push_back(dirLight);
+
+	//Second Light: Blue point light
+	Light light = {};
+	light.type = LIGHT_TYPE_POINT;
+	light.range = 8.0f;
+	light.intensity = 8;
+	light.position = XMFLOAT3(0.0f, -8.0f, 0.0f);
+	light.color = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	lights.push_back(light);
 }
 
 // --------------------------------------------------------
@@ -416,12 +433,27 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::CommandList->SetDescriptorHeaps(1, Graphics::CBVSRVDescriptorHeap.GetAddressOf());
 
 		for (Entity e : entities) {
-			Buffer vsBuffer = Buffer(
+			BufferVertex vsBuffer = BufferVertex(
 				e.GetTransform()->GetWorldMatrix(),
 				camera->GetViewMatrix(),
 				camera->GetProjectionMatrix());
-			D3D12_GPU_DESCRIPTOR_HANDLE handle = Graphics::FillNextConstantBufferAndGetGPUDescriptorHandle((void *)&vsBuffer, sizeof(Buffer));
-			Graphics::CommandList->SetGraphicsRootDescriptorTable(0, handle);
+			D3D12_GPU_DESCRIPTOR_HANDLE cbHandleVS = Graphics::FillNextConstantBufferAndGetGPUDescriptorHandle((void *)&vsBuffer, sizeof(BufferVertex));
+			Graphics::CommandList->SetGraphicsRootDescriptorTable(0, cbHandleVS);
+			BufferPixel psBuffer = BufferPixel(
+				e.GetMaterial()->GetUVScale(),
+				e.GetMaterial()->GetUVOffset(),
+				camera->GetTransform().GetPosition(),
+				2);
+			memcpy(psBuffer.lights, &lights[0], sizeof(Light) * 2);
+				// Send this to a chunk of the constant buffer heap
+				// and grab the GPU handle for it so we can set it for this draw
+			D3D12_GPU_DESCRIPTOR_HANDLE cbHandlePS = Graphics::FillNextConstantBufferAndGetGPUDescriptorHandle((void*)(&psBuffer), sizeof(BufferPixel));
+			// Set this constant buffer handle
+			// Note: This assumes that descriptor table 1 is the
+			// place to put this particular descriptor. This
+			// is based on how we set up our root signature.
+			Graphics::CommandList->SetGraphicsRootDescriptorTable(
+				1, cbHandlePS);
 			e.Draw();
 		}
 		

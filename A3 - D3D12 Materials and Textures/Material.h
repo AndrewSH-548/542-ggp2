@@ -12,6 +12,8 @@ public:
 	void AddTexture(D3D12_CPU_DESCRIPTOR_HANDLE srv, int slot);
 	void FinalizeMaterial();
 
+	XMFLOAT2 GetUVScale();
+	XMFLOAT2 GetUVOffset();
 	D3D12_GPU_DESCRIPTOR_HANDLE GetFinalGPUHandleForSRVs();
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> GetPipelineState();
 

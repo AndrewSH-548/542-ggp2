@@ -3,9 +3,18 @@
 #include <DirectXMath.h>
 #include <wrl/client.h>
 
+using namespace DirectX;
 
-struct Buffer {
-	DirectX::XMFLOAT4X4 worldMatrix;
-	DirectX::XMFLOAT4X4 viewMatrix;
-	DirectX::XMFLOAT4X4 projectionMatrix;
+struct BufferVertex {
+	XMFLOAT4X4 worldMatrix;
+	XMFLOAT4X4 viewMatrix;
+	XMFLOAT4X4 projectionMatrix;
+};
+
+struct BufferPixel {
+	XMFLOAT2 uvScale;
+	XMFLOAT2 uvOffset;
+	XMFLOAT3 cameraPos;
+	int lightCount;
+	Light lights[2];
 };

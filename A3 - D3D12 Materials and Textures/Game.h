@@ -6,6 +6,7 @@
 
 #include "Entity.h"
 #include "Camera.h"
+#include "Light.h"
 
 using namespace std;
 
@@ -45,6 +46,7 @@ private:
 
 	// Objects
 	vector<Entity> entities;
+	vector<Light> lights;
 	shared_ptr<Camera> camera;
 };
 
