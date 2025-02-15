@@ -25,9 +25,9 @@ float Attenuate(Light light, float3 worldPosition)
 
 float3 constructLight(VertexToPixel input, Light light, float3 surfaceColor, float3 specularColor, float roughness, float metalness)
 {
-    float3 diffuseTerm = DiffusePBR(input.normal, normalize(light.direction));
+    float3 diffuseTerm = DiffusePBR(input.normal, normalize(-light.direction));
     float3 fresnel;
-    float specular = MicrofacetBRDF(input.normal, normalize(light.direction), input.worldPosition - cameraPosition, roughness, specularColor, fresnel);
+    float specular = MicrofacetBRDF(input.normal, normalize(-light.direction), normalize(cameraPosition - input.worldPosition), roughness, specularColor, fresnel);
 
     float3 balancedDiffuse = DiffuseEnergyConserve(diffuseTerm, fresnel, metalness);
 
@@ -61,7 +61,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 
     float3 unpackedNormal = normalize(Normal.Sample(Sampler, input.uv).rgb * 2 - 1);
     input.normal = transformNormal(input.normal, input.tangent, unpackedNormal);
-
+    
     float3 finalLight;
 
     float3 surfaceColor = pow(Albedo.Sample(Sampler, input.uv).rgb, 2.2f);

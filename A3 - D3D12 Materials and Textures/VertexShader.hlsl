@@ -13,9 +13,9 @@ struct VertexShaderInput
 	//  |    |                |
 	//  v    v                v
 	float3 localPosition	: POSITION;     // XYZ position
+    float2 uv : TEXCOORD;
 	float3 normal : NORMAL; // Normal
 	float3 tangent : TANGENT; //Tangent
-	float2 uv : TEXCOORD;
 };
 
 cbuffer ExternalData : register(b0)
@@ -48,8 +48,8 @@ VertexToPixel main( VertexShaderInput input )
 	matrix wvp = mul(projection, mul(view, world));
 	output.screenPosition = mul(wvp, float4(input.localPosition, 1.0f));
 	output.worldPosition = mul(world, float4(input.localPosition, 1.0f)).xyz;
-	output.normal = (float3)mul(wvp, float4(input.normal, 1));
-	output.tangent = (float3)mul(world, float4(input.tangent, 1));
+	output.normal = mul((float3x3)world, input.normal);
+    output.tangent = mul((float3x3)world, input.tangent);
 	output.uv = input.uv;
 
 	// Whatever we return will make its way through the pipeline to the

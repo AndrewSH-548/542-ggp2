@@ -245,15 +245,15 @@ void Game::CreateGeometry()
 	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/roughness.png").c_str()), 2);
 	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/metal.png").c_str()), 3);
 	
-	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/albedo.png").c_str()), 0);
-	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/normals.png").c_str()), 1);
-	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/roughness.png").c_str()), 2);
-	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/metal.png").c_str()), 3);
+	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/wood/albedo.png").c_str()), 0);
+	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/wood/normals.png").c_str()), 1);
+	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/wood/roughness.png").c_str()), 2);
+	wood.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/wood/metal.png").c_str()), 3);
 	
-	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/albedo.png").c_str()), 0);
-	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/normals.png").c_str()), 1);
-	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/roughness.png").c_str()), 2);
-	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/metal.png").c_str()), 3);
+	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/albedo.png").c_str()), 0);
+	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/normals.png").c_str()), 1);
+	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/roughness.png").c_str()), 2);
+	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/metal.png").c_str()), 3);
 
 	floor.FinalizeMaterial();
 	wood.FinalizeMaterial();
@@ -271,16 +271,16 @@ void Game::CreateGeometry()
 	dirLight.type = LIGHT_TYPE_DIRECTIONAL;
 	dirLight.direction = XMFLOAT3(0.0f, -1.0f, 1.0f);
 	dirLight.color = XMFLOAT3(1.0f, 1.0f, 0.0f);
-	dirLight.intensity = 6.3f;
+	dirLight.intensity = 3.3f;
 	lights.push_back(dirLight);
 
-	//Second Light: Blue point light
+	//Second Light: Red point light
 	Light light = {};
 	light.type = LIGHT_TYPE_POINT;
-	light.range = 8.0f;
-	light.intensity = 8;
-	light.position = XMFLOAT3(0.0f, -8.0f, 0.0f);
-	light.color = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	light.range = 15.0f;
+	light.intensity = 4;
+	light.position = XMFLOAT3(3.0f, 0.0f, -2.0f);
+	light.color = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	lights.push_back(light);
 }
 
