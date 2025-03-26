@@ -1,12 +1,13 @@
 #include "Material.h"
 #include "Graphics.h"
 
-Material::Material(XMFLOAT3 colorTint, XMFLOAT2 uvScale, XMFLOAT2 uvOffset, float roughness, Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState) {
+Material::Material(XMFLOAT3 colorTint, XMFLOAT2 uvScale, XMFLOAT2 uvOffset, float roughness, bool isReflective, Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState) {
 	this->colorTint = colorTint;
 	this->uvScale = uvScale;
 	this->uvOffset = uvOffset;
 	this->pipelineState = pipelineState;
 	this->roughness = roughness;
+	this->isReflective = isReflective;
 	finalGPUHandleForSRVs = {};
 	//ZeroMemory(textureSRVsBySlot, sizeof(D3D12_CPU_DESCRIPTOR_HANDLE) * 128);
 }

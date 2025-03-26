@@ -166,12 +166,12 @@ void RayTracing::CreateRaytracingRootSignatures()
 		rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		rootParams[0].DescriptorTable.NumDescriptorRanges = 1;
-		rootParams[0].DescriptorTable.pDescriptorRanges = &geometrySRVRange;
-		
+		rootParams[0].DescriptorTable.pDescriptorRanges = &cbufferRange;
+
 		rootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		rootParams[1].DescriptorTable.NumDescriptorRanges = 1;
-		rootParams[1].DescriptorTable.pDescriptorRanges = &cbufferRange;
+		rootParams[1].DescriptorTable.pDescriptorRanges = &geometrySRVRange;
 
 		// Create the local root sig (ensure we denote it as a local sig)
 		Microsoft::WRL::ComPtr<ID3DBlob> blob;
@@ -621,12 +621,13 @@ MeshRaytracingData RayTracing::CreateBottomLevelAccelerationStructureForMesh(Mes
 		tablePointer += ShaderTableRecordSize * 2; // Get past raygen and miss shaders
 		tablePointer += ShaderTableRecordSize * raytracingData.HitGroupIndex; // Hit group
 		tablePointer += D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES; // Get past the identifier
+		tablePointer += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 
 		// Memcpy the index buffer's SRV to the table
 		// - We're assuming that the index buffer SRV is IMMEDIATELY followed by the vertex buffer SRV in the heap
 		memcpy(
 			tablePointer,
-			&indexBufferSRV,
+			&raytracingData.IndexBufferSRV,
 			sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
 	}
 	// All done
@@ -681,7 +682,7 @@ void RayTracing::CreateTopLevelAccelerationStructureForScene(vector<shared_ptr<E
 		// - mesh index tells us which cbuffer
 		// - instance ID tells us which instance in that cbuffer
 		XMFLOAT3 c = scene[i]->GetMaterial()->GetColorTint();
-		entityData[meshBlasIndex].color[instDesc.InstanceID] = XMFLOAT4(c.x, c.y, c.z, 1);
+		entityData[meshBlasIndex].color[instDesc.InstanceID] = XMFLOAT4(c.x, c.y, c.z, scene[i]->GetMaterial()->IsReflective() ? 0 : 1);
 
 		// On to the next instance for this mesh
 		instanceIDs[meshBlasIndex]++;
@@ -778,7 +779,7 @@ void RayTracing::CreateTopLevelAccelerationStructureForScene(vector<shared_ptr<E
 		// Need to get to the first descriptor in this hit group's record
 		unsigned char* hitGroupPointer = tablePointer + ShaderTableRecordSize * i;
 		hitGroupPointer += D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES; // Get past identifier
-		hitGroupPointer += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // Get past geometry SRV
+		//hitGroupPointer += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // Get past geometry SRV
 
 		// Copy the data to the CB ring buffer and grab associated CBV to place in shader table
 		D3D12_GPU_DESCRIPTOR_HANDLE cbv = Graphics::FillNextConstantBufferAndGetGPUDescriptorHandle(&entityData[i], sizeof(RaytracingEntityData));

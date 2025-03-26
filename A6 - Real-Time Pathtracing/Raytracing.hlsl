@@ -190,7 +190,7 @@ float3 RandomCosineWeightedHemisphere(float u0, float u1, float3 unitNormal)
 	return float3(x, y, z);
 }
 
-// === Shaders ===
+// === Shaders === 
 
 // Ray generation shader - Launched once for each ray we want to generate
 // (which is generally once per pixel of our output texture)
@@ -265,7 +265,7 @@ void ClosestHit(inout RayPayload payload, BuiltInTriangleIntersectionAttributes 
 	}
 
 	// We've hit, so adjust the payload color by this instance's color
-	payload.color *= entityColor[InstanceID()].rgb;
+    payload.color *= entityColor[InstanceID()].rgb;
 
 	// Get the geometry hit details and convert normal to world space
 	Vertex hit = InterpolateVertices(PrimitiveIndex(), hitAttributes.barycentrics);
@@ -279,14 +279,15 @@ void ClosestHit(inout RayPayload payload, BuiltInTriangleIntersectionAttributes 
 	float3 reflected = reflect(WorldRayDirection(), normalWorldSpace);
 	float3 randomBounce = RandomCosineWeightedHemisphere(randomFloat(rng), randomFloat(rng.yx), normalWorldSpace);
 	float3 direction = normalize(lerp(reflected, randomBounce, entityColor[InstanceID()].a));
-
+	
 	// Create the new recursive ray
 	RayDesc ray;
 	ray.Origin = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
-	ray.Direction = direction;
+	// If alpha value is 0, this is a reflective surface, so simply use that as the ray's direction.
+    ray.Direction = entityColor[InstanceID()].w == 0 ? reflected : direction;
 	ray.TMin = 0.0001f;
 	ray.TMax = 1000.0f;
-
+	
 	// Recursive ray trace
 	payload.recursionDepth++;
 	TraceRay(
