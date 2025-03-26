@@ -1,28 +1,24 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include <DirectXMath.h>
-
-using namespace DirectX;
+#include "Vector3.h"
 
 class Ray {
 public:
     Ray() {}
 
-    Ray(const XMFLOAT3& origin, const XMVECTOR& direction) : origin(origin), direction(direction) {}
+    Ray(const Point3& origin, const Vector3& direction) : origin(origin), direction(direction) {}
 
-    const XMFLOAT3& Origin() const { return origin; }
-    const XMVECTOR& Direction() const { return direction; }
+    const Point3& Origin() const { return origin; }
+    const Vector3& Direction() const { return direction; }
 
-    XMFLOAT3 At(double t) const {
-        XMFLOAT3 result;
-        XMStoreFloat3(&result, XMLoadFloat3(&origin) + t * direction);
-        return result;
+    Point3 At(double magnitude) const {
+        return origin + magnitude * direction;
     }
 
 private:
-    XMFLOAT3 origin;
-    XMVECTOR direction;
+    Point3 origin;
+    Vector3 direction;
 };
 
 #endif

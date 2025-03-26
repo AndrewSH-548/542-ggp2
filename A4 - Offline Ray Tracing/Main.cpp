@@ -1,56 +1,43 @@
-#include <iostream>
-#include <DirectXMath.h>
-
-#include "Color.h"
-#include "Ray.h"
-
-using namespace std;
-using namespace DirectX;
-
-Color RayColor(const Ray& ray) {
-	return Color(0, 0, 0);
-}
+#include "RTWeekend.h"
+#include "Camera.h"
+#include "Hittable.h"
+#include "HittableList.h"
+#include "Material.h"
+#include "Sphere.h"
 
 int main() {
-	// Image Size
-	float aspectRatio = 16.0f / 9.0f;
+	// World Data
+	HittableList world;
 
-	int imageWidth = 400;
-	int imageHeight = imageWidth / aspectRatio;
-	imageHeight = imageHeight < 1 ? 1 : imageHeight;
+	// Ground
+	world.Add(make_shared<Sphere>(Point3(0, -100.5, -11), 100, make_shared<Lambertian>(Color(0.2, 0.2, 0.1))));
+	
+	// Big Mirror (Metal)
+	world.Add(make_shared<Sphere>(Point3(-6, 1, 4), 5.5, make_shared<Metal>(Color(0.4, 0.6, 1), 0)));
 
-	// Camera Data
-	float focalLength = 1.0f;
-	float viewportHeight = 2.0f;
-	float viewportWidth = viewportHeight * (float(imageWidth) / imageHeight);
-	XMFLOAT3 cameraCenter = XMFLOAT3(0, 0, 0);
+	// Big Diamond Ball (Dielectric)
+	world.Add(make_shared<Sphere>(Point3(6, 1, 4), 5.5, make_shared<Dielectric>(2.4)));
 
-	// Calculate "UV" vectors of the viewport
-	// Vectors across edges
-	XMVECTOR viewportU = XMVectorSet(viewportWidth, 0.0f, 0.0f, 0.0f);
-	XMVECTOR viewportV = XMVectorSet(0.0f, -viewportHeight, 0.0f, 0.0f);
+	// 4 Lambertian Spheres
+	world.Add(make_shared<Sphere>(Point3(2.6, -0.2, -4), 1, make_shared<Lambertian>(Color(0.537, 0.92, 0.794))));
+	world.Add(make_shared<Sphere>(Point3(0.8, -0.3, -4), 0.7, make_shared<Lambertian>(Color(0.47, 0.66, 0.98))));
+	world.Add(make_shared<Sphere>(Point3(-0.8, -0.3, -4), 0.7, make_shared<Lambertian>(Color(0.945, 0.78, 0.85))));
+	world.Add(make_shared<Sphere>(Point3(-2.6, 0, -4), 1, make_shared<Lambertian>(Color(0.96, 0.86, 0.43))));
 
-	// Calculate deltas from pixel to pixel
-	XMVECTOR pixelDeltaU = viewportU / imageWidth;
-	XMVECTOR pixelDeltaV = viewportV / imageHeight;
+	Camera camera;
 
-	// calculate upper left pixel location
-	XMVECTOR viewportUpperLeft = XMLoadFloat3(&cameraCenter) - XMVectorSet(0, 0, focalLength, 0) - viewportU / 2 - viewportV / 2;
-	XMVECTOR pixel00Location = viewportUpperLeft + 0.5 * (pixelDeltaU / pixelDeltaV);
+	camera.aspectRatio = 16.0 / 9.0;
+	camera.imageWidth = 1200;
+	camera.samplesPerPixel = 500;
+	camera.maxDepth = 50;
 
-	// Render it
-	cout << "P3\n" << imageWidth << ' ' << imageHeight << "\n255\n";
+	camera.verticalFov = 60;
+	camera.lookFrom = Point3(0, 3, -10);
+	camera.lookAt = Point3(0, 0.6, 10);
+	camera.up = Vector3(0, 9, 0);
 
-	for (int i = 0; i < imageHeight; i++) {
-		clog << "\rScanlines remaining: " << (imageHeight - i) << " " << flush;
-		for (int j = 0; j < imageWidth; j++) {
-			XMVECTOR pixelCenter = pixel00Location + j * pixelDeltaU + i * pixelDeltaV;
-			XMVECTOR rayDirection = pixelCenter - XMLoadFloat3(&cameraCenter);
-			Ray ray(cameraCenter, rayDirection);
+	camera.defocusAngle = 0.6;
+	camera.focusDistance = 10;
 
-			Color pixelColor = RayColor(ray);
-			WriteColor(cout, pixelColor);										
-		}
-	}
-	clog << "\rDone.		\n";
+	camera.Render(world);
 }
