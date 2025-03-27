@@ -284,7 +284,7 @@ void ClosestHit(inout RayPayload payload, BuiltInTriangleIntersectionAttributes 
 	RayDesc ray;
 	ray.Origin = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
 	// If alpha value is 0, this is a reflective surface, so simply use that as the ray's direction.
-    ray.Direction = entityColor[InstanceID()].w == 0 ? reflected : direction;
+    ray.Direction = direction;
 	ray.TMin = 0.0001f;
 	ray.TMax = 1000.0f;
 	

@@ -27,6 +27,10 @@ struct RaytracingSceneData {
 	int raysPerPixel;
 };
 
+struct Texture {
+
+};
+
 #define MAX_INSTANCES_PER_BLAS 100
 struct RaytracingEntityData {
 	XMFLOAT4 color[MAX_INSTANCES_PER_BLAS];

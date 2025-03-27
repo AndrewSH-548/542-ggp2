@@ -242,10 +242,10 @@ void Game::CreateRootSigAndPipelineState()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
-	Material floor = Material(XMFLOAT3(0.7f, 0.7f, 0.7f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, true, pipelineState);
-	Material wood = Material(XMFLOAT3(1, 0.78f, 0.36f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, false, pipelineState);
-	Material paint = Material(XMFLOAT3(0.75f, 0.38f, 0.95f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, false, pipelineState);
-	Material redBlank = Material(XMFLOAT3(0, 0.8f, 0), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 0, false, pipelineState);
+	Material floor = Material(XMFLOAT3(0.7f, 0.7f, 0.7f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 0.01, pipelineState);
+	Material wood = Material(XMFLOAT3(1, 0.78f, 0.36f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, pipelineState);
+	Material paint = Material(XMFLOAT3(0.75f, 0.38f, 0.95f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, pipelineState);
+	Material redBlank = Material(XMFLOAT3(0.8f, 0, 0), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, pipelineState);
 
 	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/albedo.png").c_str()), 0);
 	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/normals.png").c_str()), 1);
