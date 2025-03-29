@@ -1,14 +1,11 @@
 #include "Material.h"
 #include "Graphics.h"
 
-Material::Material(XMFLOAT3 colorTint, XMFLOAT2 uvScale, XMFLOAT2 uvOffset, float roughness, Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState) {
-	this->colorTint = colorTint;
-	this->uvScale = uvScale;
-	this->uvOffset = uvOffset;
-	this->pipelineState = pipelineState;
-	this->roughness = roughness;
+Material::Material(Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState, XMFLOAT3 colorTint, XMFLOAT2 uvScale, XMFLOAT2 uvOffset, float roughness, float metal = 0.0f) :
+	pipelineState(pipelineState), colorTint(colorTint), uvScale(uvScale), uvOffset(uvOffset), roughness(roughness), metal(metal)
+{
+	finalized = false;
 	finalGPUHandleForSRVs = {};
-	//ZeroMemory(textureSRVsBySlot, sizeof(D3D12_CPU_DESCRIPTOR_HANDLE) * 128);
 }
 
 void Material::AddTexture(D3D12_CPU_DESCRIPTOR_HANDLE srv, int slot) {

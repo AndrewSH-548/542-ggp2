@@ -73,6 +73,7 @@ namespace RayTracing
 	// Helper functions for each initalization step
 	MeshRaytracingData CreateBottomLevelAccelerationStructureForMesh(Mesh* mesh);
 	void CreateTopLevelAccelerationStructureForScene(vector<shared_ptr<Entity>> entities);
+
 	void CreateRaytracingRootSignatures();
 	void CreateRaytracingPipelineState(std::wstring raytracingShaderLibraryFile);
 	void CreateShaderTable();

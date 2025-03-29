@@ -29,7 +29,22 @@ struct RayPayload
 // Note: We'll be using the built-in BuiltInTriangleIntersectionAttributes struct
 // for triangle attributes, so no need to define our own.  It contains a single float2.
 
+struct RaytracingMaterial
+{
+    float3 color;
+    float roughness;
+	
+    float2 uvScale;
+    float2 uvOffset;
+	
+    float metal;
+    float3 padding;
 
+    uint albedoIndex;
+    uint normalIndex;
+    uint roughnessIndex;
+    uint metalIndex;
+};
 
 // === Constant buffers ===
 
@@ -42,7 +57,7 @@ cbuffer SceneData : register(b0)
 
 #define MAX_INSTANCES_PER_BLAS 100
 cbuffer ObjectData : register(b1) {
-	float4 entityColor[MAX_INSTANCES_PER_BLAS];
+	RaytracingMaterial materialList[MAX_INSTANCES_PER_BLAS];
 };
 
 // === Resources ===
@@ -57,6 +72,10 @@ RaytracingAccelerationStructure SceneTLAS	: register(t0);
 ByteAddressBuffer IndexBuffer        		: register(t1);
 ByteAddressBuffer VertexBuffer				: register(t2);
 
+Texture2D AllTextures[] : register(t0, space1);
+
+// Samplers
+SamplerState GlobalSampler : register(s0);
 
 // === Helpers ===
 
@@ -252,6 +271,29 @@ void Miss(inout RayPayload payload)
 	payload.color *= skyColor;
 }
 
+// Handle converting tangent-space normal map to world space normal
+float3 NormalMapping(float3 normalFromMap, float3 normal, float3 tangent)
+{
+	// Gather the required vectors for converting the normal
+    float3 N = normal;
+    float3 T = normalize(tangent - N * dot(tangent, N));
+    float3 B = cross(T, N);
+
+	// Create the 3x3 matrix to convert from TANGENT-SPACE normals to WORLD-SPACE normals
+    float3x3 TBN = float3x3(T, B, N);
+
+	// Adjust the normal from the map and simply use the results
+    return normalize(mul(normalFromMap, TBN));
+}
+
+float FresnelView(float3 n, float3 v, float f0)
+{
+	// Pre-calculations
+    float NdotV = saturate(dot(n, v));
+
+	// Final value
+    return f0 + (1 - f0) * pow(1 - NdotV, 5);
+}
 
 // Closest hit shader - Runs the first time a ray hits anything
 [shader("closesthit")]
@@ -264,12 +306,28 @@ void ClosestHit(inout RayPayload payload, BuiltInTriangleIntersectionAttributes 
 		return;
 	}
 
-	// We've hit, so adjust the payload color by this instance's color
-    payload.color *= entityColor[InstanceID()].rgb;
-
 	// Get the geometry hit details and convert normal to world space
-	Vertex hit = InterpolateVertices(PrimitiveIndex(), hitAttributes.barycentrics);
-	float3 normalWorldSpace = normalize(mul(hit.normal, (float3x3)ObjectToWorld4x3()));
+    Vertex hit = InterpolateVertices(PrimitiveIndex(), hitAttributes.barycentrics);
+    float3 normalWorldSpace = normalize(mul(hit.normal, (float3x3) ObjectToWorld4x3()));
+    float3 tangentWorldSpace = normalize(mul(hit.tangent, (float3x3) ObjectToWorld4x3()));
+	
+	// Assemble material data
+    RaytracingMaterial material = materialList[InstanceID()];
+    float roughness = saturate(pow(material.roughness, 2));
+    float3 surfaceColor = material.color.rgb;
+    float metal = material.metal;
+	
+    /*if (material.albedoIndex != -1)
+    {
+        hit.uv *= (material.uvScale + material.uvOffset);
+		
+        surfaceColor = pow(AllTextures[material.albedoIndex].SampleLevel(GlobalSampler, hit.uv, 0).rgb, 2.2f);
+        roughness = pow(AllTextures[material.roughnessIndex].SampleLevel(GlobalSampler, hit.uv, 0).r, 2);
+        metal = AllTextures[material.metalIndex].SampleLevel(GlobalSampler, hit.uv, 0).r;
+		
+        float3 normalFromMap = AllTextures[material.normalIndex].SampleLevel(GlobalSampler, hit.uv, 0).rgb * 2 - 1;
+        normalWorldSpace = NormalMapping(normalFromMap, normalWorldSpace, tangentWorldSpace);
+    }*/
 
 	// Calc a unique RNG value for this ray, based on the "uv" (0-1 location) of this pixel and other per-ray data
 	float2 pixelUV = (float2)DispatchRaysIndex().xy / DispatchRaysDimensions().xy;
@@ -278,7 +336,18 @@ void ClosestHit(inout RayPayload payload, BuiltInTriangleIntersectionAttributes 
 	// Interpolate between perfect reflection and random bounce based on roughness
 	float3 reflected = reflect(WorldRayDirection(), normalWorldSpace);
 	float3 randomBounce = RandomCosineWeightedHemisphere(randomFloat(rng), randomFloat(rng.yx), normalWorldSpace);
-	float3 direction = normalize(lerp(reflected, randomBounce, entityColor[InstanceID()].a));
+	float3 direction = normalize(lerp(reflected, randomBounce, roughness));
+	
+	// Fresnel-based interpolation. This mixes roughness and a random bounce.
+    float fresnel = FresnelView(-WorldRayDirection(), normalWorldSpace, lerp(0.04f, 1, metal));
+    direction = normalize(lerp(randomBounce, direction, fresnel > rng.x));
+	
+	// Ray Coloring
+    float3 roughnessBounceColor = lerp(float3(1, 1, 1), surfaceColor, roughness); // Dir is roughness-based, so color is too
+    float3 diffuseColor = lerp(surfaceColor, roughnessBounceColor, fresnel > rng.x); // Diffuse "reflection" chance
+    float3 finalColor = lerp(diffuseColor, surfaceColor, metal); // Metal always tints
+	
+    payload.color *= finalColor;
 	
 	// Create the new recursive ray
 	RayDesc ray;

@@ -104,9 +104,16 @@ void RayTracing::CreateRaytracingRootSignatures()
 		cbufferRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 		cbufferRange.RegisterSpace = 0;
 
+		D3D12_DESCRIPTOR_RANGE allTexturesRange = {};
+		allTexturesRange.BaseShaderRegister = 0;
+		allTexturesRange.NumDescriptors = UINT_MAX;
+		allTexturesRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		allTexturesRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		allTexturesRange.RegisterSpace = 1; // Must match shader setup!
+
 		// Set up the root parameters for the global signature (of which there are four)
 		// These need to match the shader(s) we'll be using
-		D3D12_ROOT_PARAMETER rootParams[3] = {};
+		D3D12_ROOT_PARAMETER rootParams[4] = {};
 		{
 			// First param is the UAV range for the output texture
 			rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -125,7 +132,26 @@ void RayTracing::CreateRaytracingRootSignatures()
 			rootParams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 			rootParams[2].DescriptorTable.NumDescriptorRanges = 1;
 			rootParams[2].DescriptorTable.pDescriptorRanges = &cbufferRange;
+
+			// Fourth is bindless table
+			rootParams[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			rootParams[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+			rootParams[3].DescriptorTable.NumDescriptorRanges = 1;
+			rootParams[3].DescriptorTable.pDescriptorRanges = &allTexturesRange;
 		}
+
+		// Create a single static sampler (available to all shaders at the same slot)
+		// Note: This is in lieu of having materials have their own samplers for this demo
+		D3D12_STATIC_SAMPLER_DESC anisoWrap = {};
+		anisoWrap.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		anisoWrap.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		anisoWrap.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		anisoWrap.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		anisoWrap.MaxLOD = D3D12_FLOAT32_MAX;
+		anisoWrap.ShaderRegister = 0;
+		anisoWrap.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+		D3D12_STATIC_SAMPLER_DESC samplers[] = { anisoWrap };
 
 		// Create the global root signature
 		Microsoft::WRL::ComPtr<ID3DBlob> blob;
@@ -133,8 +159,8 @@ void RayTracing::CreateRaytracingRootSignatures()
 		D3D12_ROOT_SIGNATURE_DESC globalRootSigDesc = {};
 		globalRootSigDesc.NumParameters = ARRAYSIZE(rootParams);
 		globalRootSigDesc.pParameters = rootParams;
-		globalRootSigDesc.NumStaticSamplers = 0;
-		globalRootSigDesc.pStaticSamplers = 0;
+		globalRootSigDesc.NumStaticSamplers = ARRAYSIZE(samplers);
+		globalRootSigDesc.pStaticSamplers = samplers;
 		globalRootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
 
 		D3D12SerializeRootSignature(&globalRootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, blob.GetAddressOf(), errors.GetAddressOf());
@@ -681,9 +707,34 @@ void RayTracing::CreateTopLevelAccelerationStructureForScene(vector<shared_ptr<E
 		// Set up the entity data for this entity, too
 		// - mesh index tells us which cbuffer
 		// - instance ID tells us which instance in that cbuffer
-		XMFLOAT3 c = scene[i]->GetMaterial()->GetColorTint();
-		float r = scene[i]->GetMaterial()->GetRoughness();
-		entityData[meshBlasIndex].color[instDesc.InstanceID] = XMFLOAT4(c.x, c.y, c.z, r);
+		shared_ptr<Material> material = scene[i]->GetMaterial();
+		entityData[meshBlasIndex].material[instDesc.InstanceID].color = material->GetColorTint();
+		entityData[meshBlasIndex].material[instDesc.InstanceID].roughness = material->GetRoughness();
+		entityData[meshBlasIndex].material[instDesc.InstanceID].metal = material->GetMetal();
+		entityData[meshBlasIndex].material[instDesc.InstanceID].uvScale = material->GetUVScale();
+		entityData[meshBlasIndex].material[instDesc.InstanceID].uvOffset = material->GetUVOffset();
+
+		// Texture indices (-1 means no texture exists)
+		uint aIndex = -1;
+		uint nIndex = -1;
+		uint rIndex = -1;
+		uint mIndex = -1;
+
+		// Calculate the actual index of the texture descriptors (if this material has textures)
+		D3D12_GPU_DESCRIPTOR_HANDLE textureHandleStart = material->GetFinalGPUHandleForSRVs();
+		if (textureHandleStart.ptr != 0)
+		{
+			// Note: This assumes all four textures are always present if the first one is
+			aIndex = Graphics::GetDescriptorIndex(textureHandleStart);
+			nIndex = aIndex + 1;
+			rIndex = aIndex + 2;
+			mIndex = aIndex + 3;
+		}
+
+		entityData[meshBlasIndex].material[instDesc.InstanceID].albedoIndex = aIndex;
+		entityData[meshBlasIndex].material[instDesc.InstanceID].normalIndex = nIndex;
+		entityData[meshBlasIndex].material[instDesc.InstanceID].roughnessIndex = rIndex;
+		entityData[meshBlasIndex].material[instDesc.InstanceID].metalIndex = mIndex;
 
 		// On to the next instance for this mesh
 		instanceIDs[meshBlasIndex]++;

@@ -800,3 +800,14 @@ void Graphics::ReserveDescriptorHeapSlot(D3D12_CPU_DESCRIPTOR_HANDLE* reservedCP
 	if (reservedCPUHandle || reservedGPUHandle)
 		srvDescriptorOffset++;
 }
+
+// --------------------------------------------------------
+// Calculates the index of a descriptor in the descriptor
+// heap given its GPU handle
+// 
+// handle - GPU descriptor handle of the descriptor to find
+// --------------------------------------------------------
+UINT Graphics::GetDescriptorIndex(D3D12_GPU_DESCRIPTOR_HANDLE handle)
+{
+	return (UINT)(handle.ptr - CBVSRVDescriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr) / (UINT)cbvSrvDescriptorHeapIncrementSize;
+}

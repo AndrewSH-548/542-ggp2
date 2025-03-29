@@ -225,7 +225,7 @@ void Game::CreateRootSigAndPipelineState()
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 		// Define a scissor rectangle that defines a portion of
-		// the render target for clipping. This is different from
+		// the render target for clipping. This is different froms
 		// a viewport in that it is applied after the pixel shader.
 		// We need at least one of these, but we're rendering to
 		// the entire window, so it'll be the same size.
@@ -242,10 +242,10 @@ void Game::CreateRootSigAndPipelineState()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
-	Material floor = Material(XMFLOAT3(0.7f, 0.7f, 0.7f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 0.01, pipelineState);
-	Material wood = Material(XMFLOAT3(1, 0.78f, 0.36f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, pipelineState);
-	Material paint = Material(XMFLOAT3(0.75f, 0.38f, 0.95f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, pipelineState);
-	Material redBlank = Material(XMFLOAT3(0.8f, 0, 0), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, pipelineState);
+	Material floor = Material(pipelineState, XMFLOAT3(0.7f, 0.7f, 0.7f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 0.1f, 1);
+	Material wood = Material(pipelineState, XMFLOAT3(1, 0.78f, 0.36f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, 0);
+	Material paint = Material(pipelineState, XMFLOAT3(0.75f, 0.38f, 0.95f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, 0);
+	Material redBlank = Material(pipelineState, XMFLOAT3(0.8f, 0, 0), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, 0);
 
 	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/albedo.png").c_str()), 0);
 	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/normals.png").c_str()), 1);

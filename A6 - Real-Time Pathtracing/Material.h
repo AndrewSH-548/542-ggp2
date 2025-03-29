@@ -8,7 +8,7 @@ using namespace DirectX;
 class Material
 {
 public:
-	Material(XMFLOAT3 colorTint, XMFLOAT2 uvScale, XMFLOAT2 uvOffset, float roughness, Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState);
+	Material(Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState, XMFLOAT3 colorTint, XMFLOAT2 uvScale, XMFLOAT2 uvOffset, float roughness, float metal);
 	void AddTexture(D3D12_CPU_DESCRIPTOR_HANDLE srv, int slot);
 	void FinalizeMaterial();
 
@@ -16,6 +16,7 @@ public:
 	XMFLOAT2 GetUVScale() { return uvScale; }
 	XMFLOAT2 GetUVOffset() { return uvOffset; }
 	float GetRoughness() { return roughness; }
+	float GetMetal() { return metal; }
 	D3D12_GPU_DESCRIPTOR_HANDLE GetFinalGPUHandleForSRVs() { return finalGPUHandleForSRVs; }
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> GetPipelineState() { return pipelineState; }
 
@@ -24,6 +25,7 @@ private:
 	XMFLOAT2 uvScale;
 	XMFLOAT2 uvOffset;
 	float roughness;
+	float metal;
 
 	bool finalized;
 	int highestSRVSlot;
