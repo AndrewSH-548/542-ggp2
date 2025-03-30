@@ -242,7 +242,7 @@ void Game::CreateRootSigAndPipelineState()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
-	Material floor = Material(pipelineState, XMFLOAT3(0.7f, 0.7f, 0.7f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 0.1f, 1);
+	Material floor = Material(pipelineState, XMFLOAT3(0.7f, 0.7f, 0.7f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 0, 1);
 	Material wood = Material(pipelineState, XMFLOAT3(1, 0.78f, 0.36f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, 0);
 	Material paint = Material(pipelineState, XMFLOAT3(0.75f, 0.38f, 0.95f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, 0);
 	Material redBlank = Material(pipelineState, XMFLOAT3(0.8f, 0, 0), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, 0);
@@ -262,15 +262,15 @@ void Game::CreateGeometry()
 	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/roughness.png").c_str()), 2);
 	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/metal.png").c_str()), 3);
 	
-	redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/albedo.png").c_str()), 0);
-	redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/normals.png").c_str()), 1);
-	redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/roughness.png").c_str()), 2);
-	redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/metal.png").c_str()), 3);
+	//redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/albedo.png").c_str()), 0);
+	//redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/normals.png").c_str()), 1);
+	//redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/roughness.png").c_str()), 2);
+	//redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/metal.png").c_str()), 3);
 
 	floor.FinalizeMaterial();
 	wood.FinalizeMaterial();
 	paint.FinalizeMaterial();
-	redBlank.FinalizeMaterial();
+	//redBlank.FinalizeMaterial();
 
 	entities.push_back(make_shared<Entity>(Entity("Helix", Mesh(FixPath(L"../../assets/meshes/helix.obj").c_str()), wood)));
 	entities.push_back(make_shared<Entity>(Entity("Sphere", Mesh(FixPath(L"../../assets/meshes/sphere.obj").c_str()), paint)));

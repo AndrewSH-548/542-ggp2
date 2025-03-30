@@ -317,17 +317,17 @@ void ClosestHit(inout RayPayload payload, BuiltInTriangleIntersectionAttributes 
     float3 surfaceColor = material.color.rgb;
     float metal = material.metal;
 	
-    /*if (material.albedoIndex != -1)
+    if (material.albedoIndex != -1)
     {
         hit.uv *= (material.uvScale + material.uvOffset);
 		
-        surfaceColor = pow(AllTextures[material.albedoIndex].SampleLevel(GlobalSampler, hit.uv, 0).rgb, 2.2f);
+        surfaceColor *= pow(AllTextures[material.albedoIndex].SampleLevel(GlobalSampler, hit.uv, 0).rgb, 2.2f);
         roughness = pow(AllTextures[material.roughnessIndex].SampleLevel(GlobalSampler, hit.uv, 0).r, 2);
         metal = AllTextures[material.metalIndex].SampleLevel(GlobalSampler, hit.uv, 0).r;
 		
         float3 normalFromMap = AllTextures[material.normalIndex].SampleLevel(GlobalSampler, hit.uv, 0).rgb * 2 - 1;
         normalWorldSpace = NormalMapping(normalFromMap, normalWorldSpace, tangentWorldSpace);
-    }*/
+    }
 
 	// Calc a unique RNG value for this ray, based on the "uv" (0-1 location) of this pixel and other per-ray data
 	float2 pixelUV = (float2)DispatchRaysIndex().xy / DispatchRaysDimensions().xy;
