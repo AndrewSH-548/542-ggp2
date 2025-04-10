@@ -37,7 +37,11 @@ void Game::Initialize()
 	LoadShaders();
 	CreateGeometry();
 	
-	particleEmitter = make_shared<Emitter>(Emitter(XMFLOAT3(0, 0, 0), 20, 2.0f, 5));
+	particleEmitter = make_shared<Emitter>(Emitter(
+		XMFLOAT3(0, 0, 0),							//Position to draw particles
+		20,											//Max Particle Count
+		2.0f,										//Particle Lifetime (Seconds)
+		1));										//Particles per second
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -274,6 +278,7 @@ void Game::Update(float deltaTime, float totalTime)
 	UpdateImGui(deltaTime);
 	BuildUI();
 	cameras[activeCamera]->Update(deltaTime);
+	particleEmitter->Update(deltaTime, totalTime);
 	entities[0].GetTransform()->Rotate(0, deltaTime, 0);
 	entities[3].GetTransform()->Rotate(0, deltaTime, 0);
 
@@ -473,9 +478,7 @@ void Game::BuildUI() {
 		ImGui::PopID();
 	}
 	ImGui::End();
-
-	ImGui::Image(shadowSRV.Get(), ImVec2(256, 256));
-
+	
 	ImGui::Begin("Camera Control");
 	ImGui::Text("Camera %d", activeCamera);
 	ImGui::Text("Position\nX: %f\nY: %f\nZ: %f",

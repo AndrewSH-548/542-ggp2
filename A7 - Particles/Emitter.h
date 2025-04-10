@@ -24,7 +24,12 @@ public:
 		currentParticleCount = 0;
 		firstDeadParticle = 0;
 		firstLivingParticle = 0;
+		timeSinceLastEmission = 0;
+		particles = new Particle[maxParticleCount];
 	}
+	~Emitter() {
+		delete[] particles;
+	};
 
 	void Update(float delta, float currentTime);
 	void Draw();
