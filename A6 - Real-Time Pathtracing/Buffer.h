@@ -7,6 +7,8 @@
 
 using namespace DirectX;
 
+typedef unsigned int uint;
+
 struct BufferVertex {
 	XMFLOAT4X4 worldMatrix;
 	XMFLOAT4X4 viewMatrix;
@@ -27,11 +29,23 @@ struct RaytracingSceneData {
 	int raysPerPixel;
 };
 
-struct Texture {
+struct RaytracingMaterial {
+	XMFLOAT3 color;
+	float roughness;
 
+	XMFLOAT2 uvScale;
+	XMFLOAT2 uvOffset;
+
+	float metal;
+	XMFLOAT3 padding;
+
+	uint albedoIndex;
+	uint normalIndex;
+	uint roughnessIndex;
+	uint metalIndex;
 };
 
 #define MAX_INSTANCES_PER_BLAS 100
 struct RaytracingEntityData {
-	XMFLOAT4 color[MAX_INSTANCES_PER_BLAS];
+	RaytracingMaterial material[MAX_INSTANCES_PER_BLAS];
 };

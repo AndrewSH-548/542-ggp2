@@ -32,7 +32,7 @@ void Game::Initialize()
 
 	camera = make_shared<Camera>(Camera(
 		Window::AspectRatio(),
-		XMFLOAT3(0, 0, -15),
+		XMFLOAT3(0, 0, -25),
 		XMFLOAT3(0, 0, 0),
 		0.4f,
 		false));
@@ -225,7 +225,7 @@ void Game::CreateRootSigAndPipelineState()
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 		// Define a scissor rectangle that defines a portion of
-		// the render target for clipping. This is different from
+		// the render target for clipping. This is different froms
 		// a viewport in that it is applied after the pixel shader.
 		// We need at least one of these, but we're rendering to
 		// the entire window, so it'll be the same size.
@@ -242,10 +242,11 @@ void Game::CreateRootSigAndPipelineState()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
-	Material floor = Material(XMFLOAT3(0.7f, 0.7f, 0.7f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 0.01, pipelineState);
-	Material wood = Material(XMFLOAT3(1, 0.78f, 0.36f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, pipelineState);
-	Material paint = Material(XMFLOAT3(0.75f, 0.38f, 0.95f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, pipelineState);
-	Material redBlank = Material(XMFLOAT3(0.8f, 0, 0), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, pipelineState);
+	Material floor = Material(pipelineState, XMFLOAT3(0.7f, 0.7f, 0.7f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 0, 1);
+	Material wood = Material(pipelineState, XMFLOAT3(1, 0.78f, 0.36f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, 0);
+	Material paint = Material(pipelineState, XMFLOAT3(0.75f, 0.38f, 0.95f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, 0);
+	Material redBlank = Material(pipelineState, XMFLOAT3(0.8f, 0, 0), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 1, 0);
+	Material greenMirror = Material(pipelineState, XMFLOAT3(0.3f, 1, 0.3f), XMFLOAT2(1, 1), XMFLOAT2(0, 0), 0, 1);
 
 	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/albedo.png").c_str()), 0);
 	floor.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/floor/normals.png").c_str()), 1);
@@ -261,25 +262,22 @@ void Game::CreateGeometry()
 	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/normals.png").c_str()), 1);
 	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/roughness.png").c_str()), 2);
 	paint.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/metal.png").c_str()), 3);
-	
-	redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/albedo.png").c_str()), 0);
-	redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/normals.png").c_str()), 1);
-	redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/roughness.png").c_str()), 2);
-	redBlank.AddTexture(Graphics::LoadTexture(FixPath(L"../../assets/textures/paint/metal.png").c_str()), 3);
 
 	floor.FinalizeMaterial();
 	wood.FinalizeMaterial();
 	paint.FinalizeMaterial();
-	redBlank.FinalizeMaterial();
 
 	entities.push_back(make_shared<Entity>(Entity("Helix", Mesh(FixPath(L"../../assets/meshes/helix.obj").c_str()), wood)));
 	entities.push_back(make_shared<Entity>(Entity("Sphere", Mesh(FixPath(L"../../assets/meshes/sphere.obj").c_str()), paint)));
 	entities.push_back(make_shared<Entity>(Entity("Cube", Mesh(FixPath(L"../../assets/meshes/cube.obj").c_str()), floor)));
 	entities.push_back(make_shared<Entity>(Entity("Torus", Mesh(FixPath(L"../../assets/meshes/torus.obj").c_str()), redBlank)));
+	entities.push_back(make_shared<Entity>(Entity("Mirror", Mesh(FixPath(L"../../assets/meshes/quad_double_sided.obj").c_str()), greenMirror)));
 
-	entities[0]->GetTransform()->SetPosition(-6.0f, 0, 0);
-	entities[1]->GetTransform()->SetPosition(6.0f, 0, 0);
-	entities[3]->GetTransform()->SetPosition(0, 0, -20.0f);
+	entities[0]->GetTransform()->SetPosition(-10.0f, 0, 0);
+	entities[1]->GetTransform()->SetPosition(10.0f, 0, 0);
+	entities[3]->GetTransform()->SetPosition(0, 0, -10.0f);
+	entities[4]->GetTransform()->SetPosition(5.0f, 0, 0);
+	entities[4]->GetTransform()->Rotate(0, 0, XM_PIDIV2);
 
 	// Create a BLAS for a single mesh, then the TLAS for our “scene”
 	RayTracing::CreateTopLevelAccelerationStructureForScene(entities);
