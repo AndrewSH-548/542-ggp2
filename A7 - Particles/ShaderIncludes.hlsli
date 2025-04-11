@@ -50,6 +50,13 @@ struct VertexToPixel_Sky
     float3 sampleDirection : DIRECTION; // Direction
 };
 
+struct VertexToPixel_Particle
+{
+    float4 position : SV_POSITION;
+    float2 uv : TEXCOORD0;
+    float4 colorTint : COLOR;
+};
+
 #define LIGHT_TYPE_DIRECTIONAL	0
 #define LIGHT_TYPE_POINT		1
 #define LIGHT_TYPE_SPOT			2

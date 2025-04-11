@@ -28,6 +28,12 @@
     <Filter Include="Header Files\Structs">
       <UniqueIdentifier>{51f0fdb1-f9f6-491d-abb7-01e2667bb522}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Vertex">
+      <UniqueIdentifier>{3803edd5-6135-4f24-bbae-9d7daf34f57a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Pixel">
+      <UniqueIdentifier>{e3277696-c0a4-4cd4-ba0d-592c7dc210a6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -166,20 +172,26 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="PixelShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="VertexShader.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Vertex</Filter>
     </FxCompile>
-    <FxCompile Include="VertexShaderSky.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="PixelShaderSky.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="VertexShaderParticle.hlsl">
+      <Filter>Shaders\Vertex</Filter>
     </FxCompile>
     <FxCompile Include="VertexShaderShadow.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Vertex</Filter>
+    </FxCompile>
+    <FxCompile Include="VertexShaderSky.hlsl">
+      <Filter>Shaders\Vertex</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>Shaders\Pixel</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShaderParticle.hlsl">
+      <Filter>Shaders\Pixel</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShaderSky.hlsl">
+      <Filter>Shaders\Pixel</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

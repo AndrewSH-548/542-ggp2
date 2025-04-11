@@ -39,9 +39,12 @@ void Game::Initialize()
 	
 	particleEmitter = make_shared<Emitter>(Emitter(
 		XMFLOAT3(0, 0, 0),							//Position to draw particles
-		20,											//Max Particle Count
 		2.0f,										//Particle Lifetime (Seconds)
-		1));										//Particles per second
+		1,											//Particles per second
+		XMFLOAT4(1, 1, 1, 1),						//Particle color
+		FixPath(L"../../Assets/Particles/PNG (Transparent)/Circle_03.png").c_str(), 
+		FixPath(L"VertexShaderParticle.cso").c_str(),
+		FixPath(L"PixelShaderParticle.cso").c_str()));
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -335,6 +338,8 @@ void Game::Draw(float deltaTime, float totalTime)
 				// Note: Your code may differ significantly here!
 				e.GetMesh()->Draw();
 			}
+
+			particleEmitter->Draw(*cameras[activeCamera], totalTime);
 
 			viewport.Width = (float)Window::Width();
 			viewport.Height = (float)Window::Height();
