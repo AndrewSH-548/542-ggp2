@@ -4,14 +4,18 @@
 #include "Graphics.h"
 #include "WICTextureLoader.h"
 
-using namespace std;
-
-Emitter::Emitter(XMFLOAT3 pos, float lifetime, int pps, XMFLOAT4 colorTint, const wchar_t* texturePath, const wchar_t* vertexShaderPath, const wchar_t* pixelShaderPath) :
-	position(pos),
+Emitter::Emitter(XMFLOAT3 position, float rotation, float scale, float lifetime, int pps, float dispersalRange, const wchar_t* texturePath, shared_ptr<Material> material, bool randomColor) :
 	particleLifetime(lifetime),
 	particlesPerSecond(pps),
-	particleColor(colorTint)
+	dispersalRange(dispersalRange),
+	particleMaterial(material),
+	randomColor(randomColor)
 {
+	transform = make_shared<Transform>();
+	transform->MoveAbsolute(position);
+	if (rotation >= 0) transform->SetRotation(0, 0, rotation);
+	else randomRotation = true;
+	transform->Scale(scale, scale, scale);
 	secondsBetweenParticles = 1.0f / pps;
 	currentParticleCount = 0;
 	firstDeadParticle = 0;
@@ -19,9 +23,7 @@ Emitter::Emitter(XMFLOAT3 pos, float lifetime, int pps, XMFLOAT4 colorTint, cons
 	timeSinceLastEmission = 0;
 	particles = new Particle[MAX_PARTICLE_COUNT];
 	CreateStructuredBuffers();
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), texturePath, 0, &textureSRV);
-	vertexShader = make_shared<SimpleVertexShader>(Graphics::Device, Graphics::Context, vertexShaderPath);
-	pixelShader = make_shared<SimplePixelShader>(Graphics::Device, Graphics::Context, pixelShaderPath);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), texturePath, 0, &particleTexture);
 }
 
 void Emitter::CreateStructuredBuffers() {
@@ -75,7 +77,7 @@ void Emitter::CreateStructuredBuffers() {
 	// - Once we do this, we'll NEVER CHANGE THE BUFFER AGAIN
 	Graphics::Device->CreateBuffer(&ibd, &initialIndexData, indexBuffer.GetAddressOf());
 
-	// Create sampler state
+	// Create the sampler state
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -89,7 +91,6 @@ void Emitter::CreateStructuredBuffers() {
 void Emitter::Update(float delta, float currentTime) {
 	// Progress in time
 	timeSinceLastEmission += delta;
-	printf("time: %f first", timeSinceLastEmission);
 	UpdateExistingParticles(currentTime);
 
 	// Emit a particle 
@@ -100,6 +101,7 @@ void Emitter::Update(float delta, float currentTime) {
 			// Add a space to the chunk of alive particles
 			currentParticleCount++;
 			firstDeadParticle++;
+			firstDeadParticle %= MAX_PARTICLE_COUNT;
 			LoopParticleIndices();
 		}
 
@@ -116,24 +118,22 @@ void Emitter::Draw(Camera camera, float currentTime) {
 void Emitter::CreateParticle(int index, float currentTime) {
 	if (index >= MAX_PARTICLE_COUNT) index -= MAX_PARTICLE_COUNT;
 	particles[index].emitTime = currentTime;
-	particles[index].startPosition = position;
-	printf("Particle at index %i created\n", index);
+	particles[index].startPosition = RandomPosition(dispersalRange);
+	particles[index].orientation = randomRotation ? RandomRotation() : 0;
+	particles[index].color = randomColor ? RandomColor() : particleMaterial->GetColorTint();
 }
 
 void Emitter::UpdateExistingParticles(float currentTime) {
 	int index;
-	printf("\r-------CURRENT PARTICLES-------\n");
 	for (int i = firstLivingParticle; i < firstLivingParticle + currentParticleCount; i++) {
 		// Account for "ring buffer" structure
 		// if our loop index exceeds max particles, our reference index will reset to 0 to account for this.
 		index = i >= MAX_PARTICLE_COUNT ? i - MAX_PARTICLE_COUNT : i;
 		float particleAge = currentTime - particles[index].emitTime;
-		printf("\rParticle at index %i: Age: %f\n", index, particleAge);
 		if (particleAge > particleLifetime) {
 			firstLivingParticle++;
+			firstLivingParticle %= MAX_PARTICLE_COUNT;
 			currentParticleCount--;
-			printf("Particle at index %i deleted\n", index);
-			LoopParticleIndices();
 		}
 	}
 }
@@ -163,15 +163,23 @@ void Emitter::CopyAllBufferData(XMFLOAT4X4 view, XMFLOAT4X4 projection, float cu
 	
 	// Now that we're done, unmap the buffer
 	Graphics::Context->Unmap(particleDataBuffer.Get(), 0);
+	shared_ptr<SimpleVertexShader> vertexShader = particleMaterial->GetVertexShader();
+	shared_ptr<SimplePixelShader> pixelShader = particleMaterial->GetPixelShader();
+
+	vertexShader->SetShader();
+	pixelShader->SetShader();
 
 	vertexShader->SetMatrix4x4("view", view);
 	vertexShader->SetMatrix4x4("projection", projection);
-	vertexShader->SetFloat4("colorTint", particleColor);
+	vertexShader->SetFloat4("colorTint", randomColor ? RandomColor() : particleMaterial->GetColorTint());
+	vertexShader->SetFloat("particleLifetime", particleLifetime);
 	vertexShader->SetFloat("currentTime", currentTime);
+	vertexShader->SetFloat3("baseOrientation", transform->GetRotation());
+	vertexShader->SetFloat("scale", transform->GetScale().x);
 	vertexShader->SetShaderResourceView("particleData", particleDataSRV);
 	vertexShader->CopyAllBufferData();
 
-	pixelShader->SetShaderResourceView("ParticleTexture", textureSRV);
+	pixelShader->SetShaderResourceView("ParticleTexture", particleTexture);
 	pixelShader->SetSamplerState("Sampler", samplerState);
 	pixelShader->CopyAllBufferData();
 }

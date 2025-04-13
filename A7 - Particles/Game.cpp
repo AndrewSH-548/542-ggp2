@@ -37,14 +37,71 @@ void Game::Initialize()
 	LoadShaders();
 	CreateGeometry();
 	
-	particleEmitter = make_shared<Emitter>(Emitter(
+	// Particle states ====
+
+	// A depth state for the particles
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Turns off depth writing
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	Graphics::Device->CreateDepthStencilState(&dsDesc, particleDepthState.GetAddressOf());
+
+	// Blend for particles (additive)
+	D3D11_BLEND_DESC blend = {};
+	blend.AlphaToCoverageEnable = false;
+	blend.IndependentBlendEnable = false;
+	blend.RenderTarget[0].BlendEnable = true;
+	blend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA; // Still respect pixel shader output alpha
+	blend.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blend.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	Graphics::Device->CreateBlendState(&blend, particleBlendState.GetAddressOf());
+
+
+
+	// Create emitters
+	// Start by loading the particle shaders
+
+	shared_ptr<SimplePixelShader> particlePS = make_shared<SimplePixelShader>(Graphics::Device, Graphics::Context, FixPath(L"PixelShaderParticle.cso").c_str());
+	shared_ptr<SimpleVertexShader> particleVS = make_shared<SimpleVertexShader>(Graphics::Device, Graphics::Context, FixPath(L"VertexShaderParticle.cso").c_str());
+
+	// Create materials
+	shared_ptr<Material> whiteParticleMat = make_shared<Material>(XMFLOAT4(1, 1, 1, 1), particleVS, particlePS, 0.1f);
+	shared_ptr<Material> orangeParticleMat = make_shared<Material>(XMFLOAT4(1, 0.6f, 0, 1), particleVS, particlePS, 0.1f);
+	
+	emitters.push_back(make_shared<Emitter>(
 		XMFLOAT3(0, 0, 0),							//Position to draw particles
+		0,											//Base Particle Orientation
+		0.5f,										//Particle Scale
 		2.0f,										//Particle Lifetime (Seconds)
-		1,											//Particles per second
-		XMFLOAT4(1, 1, 1, 1),						//Particle color
-		FixPath(L"../../Assets/Particles/PNG (Transparent)/Circle_03.png").c_str(), 
-		FixPath(L"VertexShaderParticle.cso").c_str(),
-		FixPath(L"PixelShaderParticle.cso").c_str()));
+		4,											//Particles per second
+		0.5f,										//Particle dispersal range
+		FixPath(L"../../Assets/Particles/circle_03.png").c_str(),					//Texture Path
+		whiteParticleMat,							//Material (to color and pass in shaders)
+		true));										//Randomly color particles
+
+	emitters.push_back(make_shared<Emitter>(
+		XMFLOAT3(1, -4, 0),
+		-1,											//Set to -1 for randomRotation
+		4.0f,
+		4.0f,
+		6,
+		0.3f,
+		FixPath(L"../../Assets/Particles/flame_01.png").c_str(),
+		orangeParticleMat));
+	
+	emitters.push_back(make_shared<Emitter>(
+		XMFLOAT3(-2, -3, 0),
+		-1,											//Set to -1 for randomRotation
+		1,
+		1.0f,
+		10,
+		1.0f,
+		FixPath(L"../../Assets/Particles/star_07.png").c_str(),
+		whiteParticleMat));
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -64,6 +121,12 @@ void Game::Initialize()
 	ImGui_ImplDX11_Init(Graphics::Device.Get(), Graphics::Context.Get());
 	ImGui::StyleColorsClassic();
 	
+	// Create textures for entities
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> albedo;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> normalMap;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughnessMap;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalnessMap;
+
 	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/cobblestone/albedo.png").c_str(), 0, &albedo);
 	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/cobblestone/normas.png").c_str(), 0, &normalMap);
 	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/cobblestone/roughness.png").c_str(), 0, &roughnessMap);
@@ -161,9 +224,6 @@ void Game::CreateGeometry()
 	entities[4].GetTransform()->MoveAbsolute(0.0f, -12.0f, 0.0f);
 	entities[4].GetTransform()->Scale(20.0f, 1.0f, 20.0f);
 
-	for (int i = 0; i < 3; i++) {
-		
-	}
 	//First Light: Yellow direction light
 	Light dirLight = {};
 	dirLight.type = LIGHT_TYPE_DIRECTIONAL;
@@ -278,10 +338,12 @@ void Game::OnResize()
 void Game::Update(float deltaTime, float totalTime)
 {
 	//Update the UI
-	UpdateImGui(deltaTime);
-	BuildUI();
+	//UpdateImGui(deltaTime);
+	//BuildUI();
 	cameras[activeCamera]->Update(deltaTime);
-	particleEmitter->Update(deltaTime, totalTime);
+	for (auto& e : emitters) {
+		e->Update(deltaTime, totalTime);
+	}
 	entities[0].GetTransform()->Rotate(0, deltaTime, 0);
 	entities[3].GetTransform()->Rotate(0, deltaTime, 0);
 
@@ -339,7 +401,6 @@ void Game::Draw(float deltaTime, float totalTime)
 				e.GetMesh()->Draw();
 			}
 
-			particleEmitter->Draw(*cameras[activeCamera], totalTime);
 
 			viewport.Width = (float)Window::Width();
 			viewport.Height = (float)Window::Height();
@@ -364,8 +425,18 @@ void Game::Draw(float deltaTime, float totalTime)
 		}
 
 		skyBox->Draw(*cameras[activeCamera]);
-		ImGui::Render(); // Turns this frame’s UI into renderable triangles
-		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
+
+		Graphics::Context->OMSetBlendState(particleBlendState.Get(), 0, 0xffffffff);
+		Graphics::Context->OMSetDepthStencilState(particleDepthState.Get(), 0);
+		for (auto& e : emitters) {
+			e->Draw(*cameras[activeCamera], totalTime);
+		}
+		Graphics::Context->OMSetBlendState(0, 0, 0xffffffff);
+		Graphics::Context->OMSetDepthStencilState(0, 0);
+
+		//ImGui::Render(); // Turns this frame’s UI into renderable triangles
+		//ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
+
 	}
 
 	// Frame END
@@ -511,3 +582,4 @@ void Game::BuildUI() {
 	}
 }
 #pragma endregion
+

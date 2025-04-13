@@ -6,5 +6,5 @@ SamplerState LerpSampler : register(s0);
 float4 main(VertexToPixel_Sky input) : SV_TARGET
 {
 	
-    return SkyBoxTexture.Sample(LerpSampler, input.sampleDirection);
+    return pow(SkyBoxTexture.Sample(LerpSampler, input.sampleDirection), 2.2f);
 }

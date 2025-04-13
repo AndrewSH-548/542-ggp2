@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Mesh.h"
 #include "Entity.h"
 #include "Camera.h"
@@ -12,6 +13,7 @@
 #include <wrl/client.h>
 #include <DirectXMath.h>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -42,7 +44,10 @@ private:
 	vector<const char*> lightNames;
 	float movementSpeed = 0.1f;
 	shared_ptr<Sky> skyBox;
-	shared_ptr<Emitter> particleEmitter;
+
+	vector<shared_ptr<Emitter>> emitters;
+	Microsoft::WRL::ComPtr<ID3D11BlendState> particleBlendState;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> particleDepthState;
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
